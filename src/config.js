@@ -13,12 +13,12 @@ export const config = {
   env: env.NODE_ENV || 'development',
   port: int(env.PORT, 3000),
   baseUrl: (env.BASE_URL || `http://localhost:${int(env.PORT, 3000)}`).replace(/\/$/, ''),
-  dataDir: path.resolve(ROOT, env.DATA_DIR || 'data'),
+  dataDir: env.DATA_DIR ? path.resolve(ROOT, env.DATA_DIR) : (env.VERCEL ? '/tmp/tgt-data' : path.resolve(ROOT, 'data')),
   dbFile: env.DB_FILE || '',
   mongoUri: env.MONGODB_URI || '', // MongoDB Atlas connection string. Empty = use the local SQLite file
   encryptionKey: env.ENCRYPTION_KEY || '',
   cookieSecure: bool(env.COOKIE_SECURE, env.NODE_ENV === 'production'),
-  trustProxy: bool(env.TRUST_PROXY, false),
+  trustProxy: bool(env.TRUST_PROXY, !!env.VERCEL),
   sessionHours: int(env.SESSION_HOURS, 12),
   // SSRF / authorized-target policy
   allowPrivateTargets: bool(env.ALLOW_PRIVATE_TARGETS, false),
@@ -38,8 +38,8 @@ export const config = {
   push: { server: env.PUSH_SERVER || 'https://ntfy.sh', token: env.PUSH_TOKEN || '' },
   heartbeatUrl: env.HEARTBEAT_URL || '', // external watchdog: pinged every minute while the checker is alive
   renderWaitMs: parseInt(env.RENDER_WAIT_MS || '15000', 10), // how long a page may stay empty before it counts as blank
-  renderEnabled: String(env.RENDER_CHECKS || 'on').toLowerCase() !== 'off', // real-browser "does the page display?" checks; set RENDER_CHECKS=off on very small machines
+  renderEnabled: env.VERCEL ? bool(env.RENDER_CHECKS, false) : String(env.RENDER_CHECKS || 'on').toLowerCase() !== 'off', // real-browser checks off on serverless unless explicitly enabled
   metricsToken: env.METRICS_TOKEN || '',
   demoEnabled: bool(env.ENABLE_DEMO, false),
 };
-fs.mkdirSync(config.dataDir, { recursive: true });
+try { fs.mkdirSync(config.dataDir, { recursive: true }); } catch { /* read-only filesystem */ }

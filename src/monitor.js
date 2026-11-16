@@ -372,4 +372,13 @@ export function startScheduler() {
   log('info', 'scheduler started', { concurrency: config.maxConcurrency });
 }
 export async function stopScheduler() { timers.forEach(clearInterval); timers = []; started = false; for (let i = 0; i < 50 && running.size; i++) await sleep(100); }
+export async function runCronCycle() {
+  db.run('UPDATE assets SET lease_until=NULL WHERE lease_until<?', Date.now());
+  await tick();
+  for (let i = 0; i < 80 && running.size; i++) await sleep(100);
+  await dispatchDue();
+  await housekeeping();
+  heartbeat('scheduler'); heartbeat('dispatcher');
+  return { ok: true, stats: schedulerStats(), running: running.size };
+}
 export { hydrate, CHECKABLE };

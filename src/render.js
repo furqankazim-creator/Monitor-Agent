@@ -8,7 +8,8 @@ import { log } from './util.js';
 // "Does the page actually DISPLAY?" - opens the page in a real browser like a visitor and looks at what is on screen.
 // An HTTP 200 only proves the server answered; a broken JavaScript app can still show a completely blank page.
 const require = createRequire(import.meta.url);
-const SCREEN_DIR = path.join(config.dataDir, 'screens'); fs.mkdirSync(SCREEN_DIR, { recursive: true });
+const SCREEN_DIR = path.join(config.dataDir, 'screens');
+try { fs.mkdirSync(SCREEN_DIR, { recursive: true }); } catch {}
 export const screenshotFile = (assetId) => path.join(SCREEN_DIR, `asset-${assetId}.jpg`);
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36 TimeGlobalTechMonitor/1.0';
 

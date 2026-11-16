@@ -60,6 +60,18 @@ export function createApp() {
   });
 
   app.use('/api/webhooks', webhookRouter);
+  app.get('/api/cron', async (req, res) => {
+    if (process.env.CRON_SECRET && req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
+      return res.status(401).json({ error: 'Unauthorized cron' });
+    }
+    try {
+      const { runCronCycle } = await import('./monitor.js');
+      const r = await runCronCycle();
+      res.json(r);
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
   app.use(csrfGuard);
   app.use('/api', machineRouter);            // /agent/ingest, /mobile/report, /probe (token auth)
   app.use('/api/auth', authRouter);
