@@ -101,7 +101,7 @@ export function createApp() {
 }
 
 if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('server.js')) {
-  if (usingAtlas && roleArg !== 'all') { log('error', 'With MongoDB Atlas the app keeps a working copy in memory, so web and worker must run together. Start it with: npm start (role=all).'); process.exit(1); }
+  if (usingAtlas && roleArg === 'worker') { log('error', 'With MongoDB Atlas the app keeps a working copy in memory, so web and worker must run together. Start it with: npm start (role=all).'); process.exit(1); }
   if (roleArg === 'all' || roleArg === 'worker') startScheduler();
   if (roleArg === 'worker') { // headless worker still exposes health on PORT+1 for orchestrators
     const app = express(); app.get('/healthz', (_q, r) => { const s = schedulerStats(); r.status(Date.now() - s.lastTick < 15000 ? 200 : 503).json({ role: 'worker', ...s }); }); app.listen(config.port + 1, () => log('info', `worker health on :${config.port + 1}`)).on('error', (err) => { if (err.code === 'EADDRINUSE') explainPortInUse(config.port + 1); else { log('error', 'worker health server failed', { error: err.message }); process.exit(1); } });

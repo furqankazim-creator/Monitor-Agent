@@ -7,7 +7,15 @@ import { log } from './util.js';
 const localFile = config.dbFile || path.join(config.dataDir, 'monitor.db');
 // MongoDB Atlas mode: Atlas is the ONLY permanent database. The app works on a fast in-memory copy that is loaded from Atlas at start-up and
 // every change is written back to Atlas within about a second (write-behind). Without MONGODB_URI the app uses the local SQLite file instead.
-const atlas = config.mongoUri ? await (await import('./atlas.js')).openStore(config.mongoUri) : null;
+let atlas = null;
+if (config.mongoUri) {
+  try {
+    atlas = await (await import('./atlas.js')).openStore(config.mongoUri);
+  } catch (e) {
+    log('warn', `MongoDB Atlas connection error (${e.message.split('\n')[0]}). Falling back to local SQLite database: ${localFile}`);
+    atlas = null;
+  }
+}
 const file = atlas ? `atlas:${atlas.name}` : localFile;
 const raw = new DatabaseSync(atlas ? ':memory:' : file);
 raw.exec(atlas ? 'PRAGMA foreign_keys=ON;' : 'PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;');

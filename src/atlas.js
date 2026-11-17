@@ -2,6 +2,12 @@
 // Interface used by db.js:  readAll(table) -> docs | write(ops) | close()
 //   ops = [{ t: 'checks', id: 12, doc: {...} | null }]   (doc null = delete)
 import { MongoClient } from 'mongodb';
+import dns from 'node:dns';
+
+try {
+  // Use public DNS to prevent ISP querySrv EREFUSED errors on MongoDB SRV lookups
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch {}
 
 export function dbNameFromUri(uri) {
   try { const p = new URL(uri).pathname.replace(/^\//, ''); return p || 'time_global_monitor'; } catch { return 'time_global_monitor'; }
